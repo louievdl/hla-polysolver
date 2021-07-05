@@ -1,6 +1,7 @@
 echo "Running the build.sh Script"
 echo "Adding perl scripts"
-cpanm -i Math::BaseCalc
+echo "SRC_DIR $SRC_DIR; PREFIX $PREFIX"
+curl -L https://cpanmin.us | perl - -i Math::BaseCalc   # installs to ~/perl5; cpanm -i Math::BaseCalc
 mkdir -p $PREFIX/bin/
 mkdir -p $PREFIX/jar/
 mkdir -p $PREFIX/share/
