@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
 
+# User modifiable variables
+
+export GATK_DIR=$CONDA_PREFIX/jar
+export MUTECT_DIR=$CONDA_PREFIX/jar
+export STRELKA_DIR=$CONDA_PREFIX/share/strelka
+export DATA_DIR=$CONDA_PREFIX/share/polysolver_data
+export TMP_DIR=/tmp
+export NUM_THREADS=8
+#!/usr/bin/env bash
+
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 #### check if an appropriate number of arguments were passed ####
@@ -31,6 +41,41 @@ outDir=$7
 
 ids=$DATA_DIR/ids
 tag_file=$DATA_DIR/abc_v14.uniq
+
+### LNL 20210512 DERIVE INTERMEDIATE FILES FROM HLA FASTA ###
+
+    # generate novoalign index if necessary
+    echo "  -HLA_DATA_DIR: location of HLA fasta and derived files = $HLA_DATA_DIR" # must be set externally
+    echo "  -HLA_FASTA: fasta file with HLA alleles = $HLA_FASTA" # must be set externally
+    HLA_NIX=`echo $HLA_FASTA | perl -n -e 'chomp; s/\.(fa|fasta)$/.nix/; print'` # exchange .fa or .fasta extension for .nix
+    if [ ! -f $HLA_DATA_DIR/$HLA_NIX ]; then
+        novoindex -k 11 -s 1 $HLA_DATA_DIR/$HLA_NIX $HLA_DATA_DIR/$HLA_FASTA # original index used 11-mers at 1-bp spacing
+    fi
+
+    # generate list of ids on the fly in work_dir
+    mkdir $outDir ### LNL 20210702
+    ids=$outDir/ids
+    cat $HLA_DATA_DIR/$HLA_FASTA | grep '^>' | perl -n -e 's/^>//; print' > $ids
+
+    # generate sam header, inserting dummy nix filename
+    NOVO_SAM_HEADER="$HLA_DATA_DIR/novoalign_header.sam"
+    if [ ! -f $NOVO_SAM_HEADER ]; then
+        cat $HLA_DATA_DIR/$HLA_FASTA | perl -n -e 'BEGIN {$/ = ">"; $novo_idx_file = shift @ARGV; print "\@HD\tVN:1.0\tSO:coordinate\n\@PG\tID:novoalign\tPN:novoalign\tVN:V2.07.18\n"}; s/>$//; if (length($_) > 5) { @rec = split /\n/,$_; print "\@SQ\tSN:$rec[0]\tAS:$novo_idx_file\tLN:",length($rec[1]),"\n" }' $HLA_NIX > $NOVO_SAM_HEADER
+    fi
+    if [ ! -f $NOVO_SAM_HEADER ]; then
+        echo "failed to generate $NOVO_SAM_HEADER"
+        exit 1 # ok for a script running in a sub-shell
+    fi
+
+    # generate tag_file on the fly if necessary
+    # consists of each 38-bp string in each HLA allele at 1 bp offsets and its rev-comp, de-dupd
+    HLA_UNIQ_SEQ_FILE=`echo $HLA_FASTA | perl -n -e 'chomp; s/\.(fa|fasta)$/.uniq/; print'` # exchange .fa or .fasta extension for .uniq
+    if [ ! -f $HLA_DATA_DIR/$HLA_UNIQ_SEQ_FILE ]; then
+        cat $HLA_DATA_DIR/$HLA_FASTA  | grep -v '^>' | perl -n -e 'BEGIN {%uniq; %rc = (A => "T", C => "G", G => "C", T => "A", N => "N")}; chomp; for (my $i = 0; $i <= length($_) - 38; $i+=1) { $seq = substr($_, $i, 38); $uniq{$seq} = 1; $revcomp = ""; for (my $j = 37; $j >= 0; $j--) { $revcomp .= $rc{substr($seq,$j,1) } }; $uniq{$revcomp} = 1; }; END { @result = keys(%uniq); print "",join("\n",@result),"\n"}' > $HLA_DATA_DIR/$HLA_UNIQ_SEQ_FILE
+    fi
+    tag_file=$HLA_DATA_DIR/$HLA_UNIQ_SEQ_FILE
+
+### END DERIVE INTERMEDIATE FILES ###
 
 
 mkdir $outDir
@@ -76,7 +121,26 @@ echo -n -e "getting chr6 region\n"
 
 samtools view -H $bam > $outDir/chr6region.sam
 
-if [ $build == "hg19" ]; then
+
+### LNL 20210526 BUG FIX MAKE ALL CHROMS n:n-n ###
+
+if [ $build == "hg18" -o $build == "GRCh36" ]; then
+
+        echo -n -e "build=hg18\n"
+
+        samtools view $bam 6:30016016-30022640 >> $outDir/chr6region.sam
+
+        samtools view $bam 6:31428628-31433943 >> $outDir/chr6region.sam
+
+        samtools view $bam 6:31343505-31348848 >> $outDir/chr6region.sam
+
+        samtools view $bam chr6:30016016-30022640 >> $outDir/chr6region.sam
+
+        samtools view $bam chr6:31428628-31433943 >> $outDir/chr6region.sam
+
+        samtools view $bam chr6:31343505-31348848 >> $outDir/chr6region.sam
+
+elif [ $build == "hg19" -o $build == "GRCh37" ]; then
 
         echo -n -e "build=hg19\n"
 
@@ -86,17 +150,31 @@ if [ $build == "hg19" ]; then
 
         samtools view $bam 6:31236526-31239869 >> $outDir/chr6region.sam
 
-else
+        samtools view $bam chr6:29909037-29913661 >> $outDir/chr6region.sam
 
-        echo -n -e "build=hg18\n"
+        samtools view $bam chr6:31321649-31324964 >> $outDir/chr6region.sam
 
-        samtools view $bam chr6:30016016-30022640 >> $outDir/chr6region.sam
+        samtools view $bam chr6:31236526-31239869 >> $outDir/chr6region.sam
 
-        samtools view $bam chr6:31428628-31433943 >> $outDir/chr6region.sam
+elif [ $build == "hg38" -o $build == "GRCh38" ]; then
 
-        samtools view $bam chr6:31343505-31348848 >> $outDir/chr6region.sam
+        echo -n -e "build=hg38\n"
+
+        samtools view $bam 6:29941260-29945884 >> $outDir/chr6region.sam
+
+        samtools view $bam 6:31353872-31357188 >> $outDir/chr6region.sam
+
+        samtools view $bam 6:31268749-31272130 >> $outDir/chr6region.sam
+
+        samtools view $bam chr6:29941260-29945884 >> $outDir/chr6region.sam
+
+        samtools view $bam chr6:31353872-31357188 >> $outDir/chr6region.sam
+
+        samtools view $bam chr6:31268749-31272130 >> $outDir/chr6region.sam
 
 fi
+
+### END BUG FIX MAKE ALL CHROMS n:n-n ###
 
 samtools view -bS -o $outDir/chr6region.bam $outDir/chr6region.sam
 
@@ -118,9 +196,11 @@ rm -f $outDir/*sam
 
 echo -n -e "aligning to HLA library\n"
 
-cat $DATA_DIR/novoalign_complete_header.sam > $outDir/nv.complete.chr6region.R0k6.sam
+# cat $DATA_DIR/novoalign_complete_header.sam > $outDir/nv.complete.chr6region.R0k6.sam
+cat $NOVO_SAM_HEADER > $outDir/nv.complete.chr6region.R0k6.sam ### LNL 20210512 ###
 
-$DIR/../scripts/align_fork_fh.pl $outDir/merged.1.fastq $outDir/merged.2.fastq $NUM_THREADS $format $DATA_DIR/abc_complete.nix $outDir/nv.complete.chr6region.R0k6.sam 0
+# $DIR/../scripts/align_fork_fh.pl $outDir/merged.1.fastq $outDir/merged.2.fastq $NUM_THREADS $format $DATA_DIR/abc_complete.nix $outDir/nv.complete.chr6region.R0k6.sam 0
+$DIR/../scripts/align_fork_fh.pl $outDir/merged.1.fastq $outDir/merged.2.fastq $NUM_THREADS $format $HLA_DATA_DIR/$HLA_NIX $outDir/nv.complete.chr6region.R0k6.sam 0 ### LNL 20210512 ###
 
 samtools view -bS -o $outDir/nv.complete.chr6region.R0k6.bam $outDir/nv.complete.chr6region.R0k6.sam
 
