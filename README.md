@@ -1,25 +1,21 @@
-##### This is **NOT** the distribution site for Polysolver software. This is a modification made for pipeline incorperation from v1.0.  If you're looking for Polysolver please see:
+# louievdl/hla-polysolver
 
-http://archive.broadinstitute.org/cancer/cga/polysolver
+<a href="https://software.broadinstitute.org/cancer/cga/polysolver">Polysolver software</a> is developed by the Broad Institute. Availability and running instructions for the most current version are described <a href="https://software.broadinstitute.org/cancer/cga/polysolver_download">here</a>. This version is preferred.
 
-> Shukla SA, Rooney MS, Rajasagi M, Tiao G, Dixon PM, Lawrence MS, Stevens J, Lane WJ, Dellagatta JL, Steelman S, Sougnez C, Cibulskis K, Kiezun A, Hacohen N, Brusic V, Wu CJ, Getz G. Comprehensive analysis of cancer-associated somatic mutations in class I HLA genes. Nat Biotechnol. 2015 Nov;33(11):1152-8. PubMed PMID: 26372948; PubMed Central PMCID: PMC4747795.
+This fork of Polysolver is a minor modification on <a href="https://github.com/jason-weirather/hla-polysolver">jason-weirather/hla-polysolver</a>, which 1) was based on Polysolver 1.0; 2) was modified under Polysolver's BSD-style License; and 3) does not produce exactly the same HLA haplotype calls as the example file included with Polysolver. Most differences were very minor, occurring in the 7th and 8th digits, with one difference in the 4th digit of the HLA-B allele. It should be noted that this work is not affiliated with Polysolver or the Broad Institute, and my work is free to use, reuse and modify under Apache License 2.0. See `LICENSE` file for licenses of software dependencies.
 
-https://www.ncbi.nlm.nih.gov/pubmed/26372948
+The purpose of this update of hla-polysolver is to: 1) handle any genome build (hg18/GRCh36, hg19/GRCh37, or hg38/GRCh38); 2) tolerate presence or absence of 'chr' in the chromosome specification of bam files; and 3) like <a href="https://github.com/jason-weirather/hla-polysolver">jason-weirather/hla-polysolver</a>, provide HLA haplotype "winner" files for loss of heterozygosity analysis by `LOHHLA` software (<a href="https://pubmed.ncbi.nlm.nih.gov/29107330">McGranahan <i>et al</i></a>). As such, it provides one part of a Polysolver-LOHHLA pipeline.
 
-⚠ Please note that this fork of polysolver does not produce exactly the same HLA haplotype calls as the example file included with polysolver. I observed one difference in the haplotype, but I think it was in one of the more minor subtype of one of the haplotypes.
+If you are using hla-polysolver in any form, you are requested to cite the original paper by <a href="https://www.ncbi.nlm.nih.gov/pubmed/26372948">Shukla <i>et al</i></a>.
 
-The most current version of polysolver I know of now is available through docker here https://hub.docker.com/r/sachet/polysolver/tags/ These have been maintained by the first author of Polysolver, and I recommend using this if at all possible.
+## Software changes
 
-If you are using this fork *hla-polysolver* as part of a pipeline be sure to site the above Polysolver software and publication. This is modification under Polysolver's "BSD-style License" with the purpose of maintaing a stable platform for supplying the required files for to work with the LOHHLA pipeline (McGranahan N., et. al. https://doi.org/10.1016/j.cell.2017.10.001) and other pipelines. The mutual requirements include legacy versions of dependencies that are not described in the manuals so this *hla-polysolver* fork is intended to provide a clear connection to those undocumented dependencies and ease their depolyment on conda and docker environments. This fork was generated from v1.0 Polysolver and is not affiliated with Polysolver or the Broad Institute. Please see `LICENSE` for the particular requirements and respect the license requirements of the dependencies. And to make adjustments or updated genomes/annotations as necessary. My work on this fork is free to use reuse and modify under the Apache 2.0 license, but please pay attention to the included `LICENSE` notice for Polysolver and its dependancies there are a lot of boutique licenses to pay attention to including Broad licenses and Commercial Novoalign license.
+#### polysolver v1.0 -> jason-weirather/hla-polysolver 1.0.0
 
-# hla-polysolver
-
-##### Changes in hla-polsyolver 1.0.0 from polysolver v1.0
-
-* Added added build recipie for conda
+* Added build recipe for conda
 * Remove absolute path references that break the run
 * Use the install of `build.sh` to make it so environment variables are set automatically **when run within Conda**
-* Reduced use of enviornment variables
+* Reduced use of environment variables
 * Remove Novoalign index from the source code. Now is pre-built when building the conda environment, and is included along with other necessary data in the conda environment. If you are doing a local run and not using Conda see `build.sh` to see how to create this data file.
 * Change from hardcoded perl and bash to whichever the user has installed under /usr/bin/env. This is better for non-conda runs but has the added benefit of using Conda's perl when running.
 * Installed the shell scripts for hla typing, mutation calling, and annotation in the Conda enviornment so they are in the `PATH` of the Conda environment.
@@ -29,12 +25,18 @@ If you are using this fork *hla-polysolver* as part of a pipeline be sure to sit
 * Added old picard tools dependency (likely what polysolver referred to as GATK)
 * Updated data to include necessary fastas to complete mutation calling pipeline (part 2 of polysolver)
 
-## Running in Conda
+#### jason-weirather/hla-polysolver 1.0.0 -> louievdl/hla-polysolver 1.0.0
 
-hla-polysolver is mainly intended for use by adding it to a conda environment.
+* allow user to specify any of the last three genome builds (hg18/GRCh36, hg19/GRCh37, or hg38/GRCh38)
+* handle bam files with or without 'chr' in chromosome names
+* removed hardwiring of HLA allele fasta file and index; user can provide an alternate. For consistency, the user can use the same allele file for other pipelines such as LOHHLA.
+* HLA allele unique sequence file, allele IDs file, and SAM header file are all now generated on the fly from the allele fasta file
 
-You can do this by setting your `~/.condarc` file to include
+## A conda environment for use with hla-polysolver
 
+Anaconda provides a package incorporating jason-weirather/hla-polsolver 1.0.0. Install and test it before overwriting with this fork. Disclaimer: as with any installation, success here may require supplying additional prerequisites specific to your system either at the level of the operating system or as conda packages. This is left as an exercise for the user.
+
+Set up your conda channels in `~/.condarc`:
 ```
 channels:
   - defaults
@@ -43,39 +45,31 @@ channels:
   - vacation
 ```
 
-Then if you can install the usual conda way.  I recommend creating a seperate environment for it because of its many ancient dependancies.  You probably don't want them in your every day working environment.
-
-`$ conda create -n polysolver -c vacation hla-polysolver`
-
-Then after the environement is created you can activate it.
-
-`$ source activate polysolver`
-
-After activating the environment you need to set the perl5 path (thanks smangul1).
-
-`(polysolver)$ export PERL5LIB="$CONDA_PREFIX/lib/perl5/5.22.0/"`
-
-And then you can run polysolver as described int the testing description. If you get the github repository you will have access to the testing data.
-
-`(polysolver)$ git clone https://github.com/jason-weirather/hla-polysolver.git`
-
-And you can run the test.
-
+Create a separate environment for polysolver to isolate its many old dependencies. Then activate and set the perl5 path.
 ```
-(polysolver)$ shell_call_hla_type hla-polysolver test/test.bam Unknown 1 hg19 STDFQ 0 output
-(polysolver)$ shell_call_hla_mutations_from_type hla-polysolver/test/test.bam hla-polysolver/test/test.tumor.bam output/winners.hla.txt hg19 STDFQ output
-(polysolver)$ shell_annotate_hla_mutations indiv output
+$ conda create -n polysolver -c vacation hla-polysolver
+$ conda activate polysolver
+(polysolver)$ export PERL5LIB="$CONDA_PREFIX/lib/perl5/5.22.0/"
 ```
 
-This will produce results in a folder called output.
+Get the github repository. You will access test bams and winner files now, and later use it to overwrite hla-polysolver in your conda installation
+```
+(polysolver)$ git clone https://github.com/louievdl/hla-polysolver.git
+```
 
-##### Building the Conda Enviroment yourself
+Run tests using anaconda's polysolver and bams from hla-polysolver repo. Increase java memory beforehand if necessary
+The first script, `shell_call_hla_type` is the only strictly-necessary script for a LOHHLA pipeline, as it produces the winner files required by LOHHLA. It successfully processes the test files without modification.
+The second script, `shell_call_hla_mutations_from_type`, to run successfully, requires minor modification, running muTect specifically under java version 7.
+The third script, `shell_annotate_hla_mutations` runs on the test files without error.
+```
+(polysolver)$ export _JAVA_OPTIONS="-Xmx1g" && shell_call_hla_type hla-polysolver/test/test.bam Unknown 1 hg19 STDFQ 0 hla-polysolver/output
+(polysolver)$ export _JAVA_OPTIONS="-Xmx1g" && shell_call_hla_mutations_from_type hla-polysolver/test/test.bam hla-polysolver/test/test.tumor.bam hla-polysolver/output/winners.hla.txt hg19 STDFQ hla-polysolver/output
+(polysolver)$ shell_annotate_hla_mutations indiv hla-polysolver/output
+```
 
-Requirements to build the linux conda environment that didn't seem to pick up from conda revolved around the strelka caller and maybe its vcftools ... may need to have these in the environment to build
+Results will be in the hla-polysolver/output folder.
 
-* zlib1g-dev
-* g++
-
+## HLA-POLYSOLVER MANUAL
 
 #### TABLE OF CONTENTS ####
 1. Description
