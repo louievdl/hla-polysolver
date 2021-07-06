@@ -10,21 +10,6 @@ If you are using hla-polysolver in any form, you are requested to cite the origi
 
 ## Software changes
 
-#### polysolver v1.0 -> jason-weirather/hla-polysolver 1.0.0
-
-* Added build recipe for conda
-* Remove absolute path references that break the run
-* Use the install of `build.sh` to make it so environment variables are set automatically **when run within Conda**
-* Reduced use of environment variables
-* Remove Novoalign index from the source code. Now is pre-built when building the conda environment, and is included along with other necessary data in the conda environment. If you are doing a local run and not using Conda see `build.sh` to see how to create this data file.
-* Change from hardcoded perl and bash to whichever the user has installed under /usr/bin/env. This is better for non-conda runs but has the added benefit of using Conda's perl when running.
-* Installed the shell scripts for hla typing, mutation calling, and annotation in the Conda enviornment so they are in the `PATH` of the Conda environment.
-* Cleaning up the command calls and piping allows running the installed scripts from outside of the source directory.
-* Removed hardcoded author paths
-* Hardcoded temporary directory to /tmp. Not a great thing, but should work on most linux, and I plan to fix this soon.
-* Added old picard tools dependency (likely what polysolver referred to as GATK)
-* Updated data to include necessary fastas to complete mutation calling pipeline (part 2 of polysolver)
-
 #### jason-weirather/hla-polysolver 1.0.0 -> louievdl/hla-polysolver 1.0.0
 
 * allow user to specify any of the last three genome builds (hg18/GRCh36, hg19/GRCh37, or hg38/GRCh38)
@@ -57,10 +42,14 @@ Get the github repository. You will access test bams and winner files now, and l
 (polysolver)$ git clone https://github.com/louievdl/hla-polysolver.git
 ```
 
-Run tests using anaconda's polysolver and bams from hla-polysolver repo. Increase java memory beforehand if necessary
+Run tests using anaconda's polysolver and bams from hla-polysolver repo. Increase java memory beforehand if necessary.
+
 The first script, `shell_call_hla_type` is the only strictly-necessary script for a LOHHLA pipeline, as it produces the winner files required by LOHHLA. It successfully processes the test files without modification.
+
 The second script, `shell_call_hla_mutations_from_type`, to run successfully, requires minor modification, running muTect specifically under java version 7.
+
 The third script, `shell_annotate_hla_mutations` runs on the test files without error.
+
 ```
 (polysolver)$ export _JAVA_OPTIONS="-Xmx1g" && shell_call_hla_type hla-polysolver/test/test.bam Unknown 1 hg19 STDFQ 0 hla-polysolver/output
 (polysolver)$ export _JAVA_OPTIONS="-Xmx1g" && shell_call_hla_mutations_from_type hla-polysolver/test/test.bam hla-polysolver/test/test.tumor.bam hla-polysolver/output/winners.hla.txt hg19 STDFQ hla-polysolver/output
@@ -72,18 +61,18 @@ Results will be in the hla-polysolver/output folder.
 ## HLA-POLYSOLVER MANUAL
 
 #### TABLE OF CONTENTS ####
-1. Description
-    1.1 POLYSOLVER
-    1.2 POLYSOLVER-based mutation detection
-    1.3	Annotation of mutations
+1. Description \
+    1.1 POLYSOLVER \
+    1.2 POLYSOLVER-based mutation detection \
+    1.3	Annotation of mutations \
 2. Installation
-3. Testing
-    3.1 POLYSOLVER
-    3.2 POLYSOLVER-based mutation detection
-    3.3	Annotation of mutations
-4. Running
-    4.1 POLYSOLVER
-    4.2 POLYSOLVER-based mutation detection
+3. Testing \
+    3.1 POLYSOLVER \
+    3.2 POLYSOLVER-based mutation detection \
+    3.3	Annotation of mutations \
+4. Running \
+    4.1 POLYSOLVER \
+    4.2 POLYSOLVER-based mutation detection \
     4.3	Annotation of mutations
 
 #### 1. Description ####
