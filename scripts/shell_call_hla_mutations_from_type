@@ -289,7 +289,7 @@ for allele in $var; do
 
         # run mutect
         echo -n -e "mutect: $allele\n"
-        java -Xmx2g -jar $MUTECT_DIR/muTect-1.1.6.jar \
+        $CONDA_PREFIX/jre/bin/java -Xmx2g -jar $MUTECT_DIR/muTect-1.1.6.jar \
         --analysis_type MuTect \
         --reference_sequence $DATA_DIR/complete/$allele.fasta \
         --input_file:normal $outDir/type.$allele.bam \
