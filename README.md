@@ -61,16 +61,16 @@ Results will be in the hla-polysolver/output folder.
 ## HLA-POLYSOLVER MANUAL
 
 #### TABLE OF CONTENTS ####
-1. Description \
+1. [Description](#1.-description) \
     1.1 POLYSOLVER \
     1.2 POLYSOLVER-based mutation detection \
-    1.3	Annotation of mutations \
-2. Installation
-3. Testing \
+    1.3	Annotation of mutations
+2. [Installation](#2.-installation)
+3. [Testing](#3.-testing) \
     3.1 POLYSOLVER \
     3.2 POLYSOLVER-based mutation detection \
-    3.3	Annotation of mutations \
-4. Running \
+    3.3	Annotation of mutations
+4. [Running](#4.-running) \
     4.1 POLYSOLVER \
     4.2 POLYSOLVER-based mutation detection \
     4.3	Annotation of mutations
