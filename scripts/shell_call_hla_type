@@ -124,7 +124,7 @@ samtools view -H $bam > $outDir/chr6region.sam
 
 ### LNL 20210526 BUG FIX MAKE ALL CHROMS n:n-n ###
 
-if [ $build == "hg18" -o $build == "GRCh36" ]; then
+if [ $build == "hg18" ] || [ $build == "GRCh36" ] || [ $build == "grch36" ]; then
 
         echo -n -e "build=hg18\n"
 
@@ -140,7 +140,7 @@ if [ $build == "hg18" -o $build == "GRCh36" ]; then
 
         samtools view $bam chr6:31343505-31348848 >> $outDir/chr6region.sam
 
-elif [ $build == "hg19" -o $build == "GRCh37" ]; then
+elif [ $build == "hg19" ] || [ $build == "GRCh37" ] || [ $build == "grch37" ]; then
 
         echo -n -e "build=hg19\n"
 
@@ -156,7 +156,7 @@ elif [ $build == "hg19" -o $build == "GRCh37" ]; then
 
         samtools view $bam chr6:31236526-31239869 >> $outDir/chr6region.sam
 
-elif [ $build == "hg38" -o $build == "GRCh38" ]; then
+elif [ $build == "hg38" ] || [ $build == "GRCh38" ] || [ $build == "grch38" ]; then
 
         echo -n -e "build=hg38\n"
 
