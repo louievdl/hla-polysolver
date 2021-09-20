@@ -105,7 +105,22 @@ echo -n -e "getting matching tags\n"
 
 samtools view -H $bam > $outDir/tag.sam
 
-samtools view $bam | grep -F -f $tag_file >> $outDir/tag.sam
+### LNL 20210920 reads found in this step are only from HLA region.
+###  to improve performance, accept reads from chr6, from 3MB upstream of HLA-A to 3MB downstream of HLA-B, encompassing all HLA genes, and filter these with tag_file
+
+if [ $build == "hg18" ] || [ $build == "GRCh36" ] || [ $build == "grch36" ]; then
+    hla_region="6:27016016-34433943"
+elif [ $build == "hg19" ] || [ $build == "GRCh37" ] || [ $build == "grch37" ]; then
+    hla_region="6:26909037-34324964"
+elif [ $build == "hg38" ] || [ $build == "GRCh38" ] || [ $build == "grch38" ]; then
+    hla_region="6:26941260-34357179"
+fi
+samtools view $bam $hlaregion | grep -F -f $tag_file >> $outDir/tag.sam
+samtools view $bam chr$hlaregion | grep -F -f $tag_file >> $outDir/tag.sam
+
+### END performance improvement ###
+
+#samtools view $bam | grep -F -f $tag_file >> $outDir/tag.sam # old way, filter all reads, slow; observed qualifying reads come only from chr6:~30MB
 
 samtools view -bS -o $outDir/tag.bam $outDir/tag.sam
 
